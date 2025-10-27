@@ -10,7 +10,6 @@ public:
 	CGuardian(SURFACEINFO sfUnit[5], BOOL isPlayer, CTower* g_objTower);
 	CGuardian(CUnitInfo sfUnit, BOOL isPlayer, CTower* g_objTower);
 	~CGuardian();
-
 };
 
 #endif

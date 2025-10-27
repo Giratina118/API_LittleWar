@@ -62,12 +62,12 @@ void OnClickUpTitleScreen(HWND* hWnd, Screen* screenState, int mouseX, int mouse
 		if (mouseY > 250 && mouseY < 320 && mouseClickYPos > 250 && mouseClickYPos < 320)		// 이어하기
 		{
 			LoadFile(gold, enemyCreateUnitTimer, g_infoUnit, g_objTower, maxMana, manaDelay, upgradeLevel, upgradeGold, stageLevel);
-			*screenState = readyScreen;
+			*screenState = Screen_Ready;
 		}
 		else if (mouseY > 325 && mouseY < 395 && mouseClickYPos > 325 && mouseClickYPos < 395)	// 새로시작
 		{
-			ResetNewGame(gold, enemyCreateUnitTimer, g_infoUnit, g_objTower, maxMana, manaDelay, upgradeLevel, upgradeGold);
-			*screenState = readyScreen;
+			ResetNewGame(gold, enemyCreateUnitTimer, g_infoUnit, g_objTower, maxMana, manaDelay, upgradeLevel, upgradeGold, stageLevel);
+			*screenState = Screen_Ready;
 		}
 		else if (mouseY > 400 && mouseY < 470 && mouseClickYPos > 400 && mouseClickYPos < 470)	// 종료
 		{
@@ -86,12 +86,12 @@ void OnClickUpReadyScreen(Screen* screenState, int mouseX, int mouseY, int mouse
 			*nBgX = 0;
 			*maxMana_InGame = *maxMana;
 			*manaDelay_InGame = *manaDelay;
-			*screenState = gameScreen;
+			*screenState = Screen_Game;
 		}
 		else if (mouseY > 330 && mouseY < 390 && mouseClickYPos > 330 && mouseClickYPos < 390)	// 타이틀로 돌아가기
 		{
 			SaveFile(stageLevel, *gold, g_infoUnit, upgradeLevel);
-			*screenState = titleScreen;
+			*screenState = Screen_Title;
 		}
 	}
 
@@ -174,7 +174,7 @@ void OnClickUpPauseScreen(Screen* screenState, int mouseX, int mouseY, int mouse
 	{
 		if (mouseX > WINDOW_WIDTH / 2 - 150 && mouseX < WINDOW_WIDTH / 2 - 70 && mouseClickXPos > WINDOW_WIDTH / 2 - 150 && mouseClickXPos < WINDOW_WIDTH / 2 - 70)		// 계속하기
 		{
-			*screenState = gameScreen;
+			*screenState = Screen_Game;
 		}
 		else if (mouseX > WINDOW_WIDTH / 2 - 40 && mouseX < WINDOW_WIDTH / 2 + 40 && mouseClickXPos > WINDOW_WIDTH / 2 - 40 && mouseClickXPos < WINDOW_WIDTH / 2 + 40)	// 다시하기
 		{
@@ -192,10 +192,10 @@ void OnClickUpPauseScreen(Screen* screenState, int mouseX, int mouseY, int mouse
 			g_objTower[1].ResetTower();
 			*nBgX = 0;
 
-			*screenState = gameScreen;
+			*screenState = Screen_Game;
 		}
 		else if (mouseX > WINDOW_WIDTH / 2 + 70 && mouseX < WINDOW_WIDTH / 2 + 150 && mouseClickXPos > WINDOW_WIDTH / 2 + 70 && mouseClickXPos < WINDOW_WIDTH / 2 + 150)
-			*screenState = stageEndScreen;	// 나가기
+			*screenState = Screen_StageEnd;	// 나가기
 	}
 }
 
@@ -206,7 +206,7 @@ void OnClickUpStageScreen(Screen* screenState, int mouseX, int mouseY, int mouse
 	if (mouseX > WINDOW_WIDTH / 2 - 85 && mouseX < WINDOW_WIDTH / 2 + 85 && mouseY > MAP_HEIGHT / 2 + 50 && mouseY < MAP_HEIGHT / 2 + 100 &&
 		mouseClickXPos > WINDOW_WIDTH / 2 - 85 && mouseClickXPos < WINDOW_WIDTH / 2 + 85 && mouseClickYPos > MAP_HEIGHT / 2 + 50 && mouseClickYPos < MAP_HEIGHT / 2 + 100)
 	{
-		*screenState = readyScreen;
+		*screenState = Screen_Ready;
 		*gold += *getGold;
 		*getGold = 0;
 		*nowMana_InGame = 0;

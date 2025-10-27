@@ -6,7 +6,7 @@
 #pragma warning(disable : 4996)
 
 // 새로 시작
-void ResetNewGame(int* gold, float* enemyCreateUnitTimer, CUnitInfo* g_infoUnit, CTower* g_objTower, int* maxMana, float* manaDelay, int* upgradeLevel, int* upgradeGold)
+void ResetNewGame(int* gold, float* enemyCreateUnitTimer, CUnitInfo* g_infoUnit, CTower* g_objTower, int* maxMana, float* manaDelay, int* upgradeLevel, int* upgradeGold, int* stageLevel)
 {
 	*gold = STARTGOLD;
 	StageClear(1, enemyCreateUnitTimer, g_infoUnit, g_objTower);
@@ -30,12 +30,14 @@ void ResetNewGame(int* gold, float* enemyCreateUnitTimer, CUnitInfo* g_infoUnit,
 	upgradeGold[3] = 400;
 	upgradeGold[4] = 500;
 	upgradeGold[5] = 500;
+
+	*stageLevel = 1;
 }
 
 // 파일 불러오기
 void LoadFile(int* gold, float* enemyCreateUnitTimer, CUnitInfo* g_infoUnit, CTower* g_objTower, int* maxMana, float* manaDelay, int* upgradeLevel, int* upgradeGold, int* stageLevel)
 {
-	ResetNewGame(gold, enemyCreateUnitTimer, g_infoUnit, g_objTower, maxMana, manaDelay, upgradeLevel, upgradeGold);
+	ResetNewGame(gold, enemyCreateUnitTimer, g_infoUnit, g_objTower, maxMana, manaDelay, upgradeLevel, upgradeGold, stageLevel);
 
 	FILE* fin;
 	fin = fopen("saveData.bin", "rb");

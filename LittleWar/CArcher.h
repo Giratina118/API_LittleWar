@@ -10,7 +10,6 @@ public:
 	CArcher(SURFACEINFO sfUnit[5], BOOL isPlayer, CTower* g_objTower);
 	CArcher(CUnitInfo sfUnit, BOOL isPlayer, CTower* g_objTower);
 	~CArcher();
-
 };
 
 #endif

@@ -10,7 +10,6 @@ public:
 	CWarrior(SURFACEINFO sfUnit[5], BOOL isPlayer, CTower* g_objTower);
 	CWarrior(CUnitInfo sfUnit, BOOL isPlayer, CTower* g_objTower);
 	~CWarrior();
-
 };
 
 #endif

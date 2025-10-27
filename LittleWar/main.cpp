@@ -20,32 +20,17 @@ LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
 HINSTANCE g_hInst;
 HWND hWndMain;
-LPSTR lpszClass = "api_2d_tower_defence";
+LPSTR lpszClass = "api_2d_tower_defence_MinHyeok";
 
-SURFACEINFO g_sfBack;			// 버퍼 표면 (게임)
-SURFACEINFO g_sfBack_Title;		// 버퍼 표면 (타이틀)
-SURFACEINFO g_sfBG;				// 배경 표면 
-SURFACEINFO g_sfTitle;			// 타이틀 그림
-SURFACEINFO g_sfGameResult[2];			// 게임 결과 (0: 승리,  1: 패배)
+SURFACEINFO g_sfBack; // 후면 버퍼 표면
+SURFACEINFO g_surfaceInfo_Array[Surface_Max]; // 이미지 모음
 SURFACEINFO g_btnUnit[UNIT_COUNT / 2];	// 버튼의 유닛 그림
-SURFACEINFO g_sfBtn;					// 버튼(유닛 소환)
-SURFACEINFO g_sfBtnScreen;				// 버튼(게임 시작, 나가기 등)
-SURFACEINFO g_sfUpgradeBtn;				// 업그레이트 버튼
-SURFACEINFO g_sfMana;					// 마나 아이콘
-SURFACEINFO g_sfGold;					// 골드 아이콘
-SURFACEINFO g_sfTowerIcon;				// 타워 아이콘
-SURFACEINFO g_sfUpgradeArrow[2];		// 0: 오른쪽 화살표,  1: 위쪽 화살표
-SURFACEINFO g_sfRoundBtn[8];			// 둥근 버튼
-SURFACEINFO g_sfRectBtn[4];				// 사각형 버튼
-SURFACEINFO g_sfArrow[2];				// 화살
-SURFACEINFO* g_sfPlayerArrow[64];
-SURFACEINFO* g_sfEnemyArrow[64];
 CUnitInfo	g_infoUnit[UNIT_COUNT];		// 유닛 정보
 CUnitInfo*	playerUnit[MAX_UNIT_COUNT];	// 플레이어 유닛
 CUnitInfo*	enemyUnit[MAX_UNIT_COUNT];	// 적 유닛
 CTower		g_objTower[2];				// 타워 정보,  0: 플레이어 타워,  1: 적 타워
 
-Screen		screenState = titleScreen;	// titleScreen, readyScreen, gameScreen, stageEndScreen
+Screen		screenState = Screen_Title;	// Screen_Title, Screen_Ready, Screen_Game, Screen_StageEnd
 int titleFlowDir = -1;
 float titleFlowTimer = 0.0f;
 
@@ -109,8 +94,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
 
 			switch (screenState)
 			{
-			case titleScreen:
-			case readyScreen:
+			case Screen_Title:
+			case Screen_Ready:
 				// 배경화면 흐름
 				titleFlowTimer += timer.GetDeltaTime();
 				if (titleFlowTimer > 0.01f)
@@ -125,7 +110,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
 				UpdateWindow(hWnd);
 				break;
 
-			case gameScreen:
+			case Screen_Game:
 				manaTimer += timer.GetDeltaTime();			// 시간에 따른 마나 획득
 				if (manaTimer > manaDelay_InGame && nowMana_InGame < maxMana_InGame)
 				{
@@ -135,7 +120,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
 
 				for (int i = 0; i < UNIT_COUNT / 2; i++) g_infoUnit[i * 2].CreateTimerUpdate(timer); // 플레이어 유닛 생성 딜레이
 
-				__KeyProc(hWnd, &nBgX, &g_objTower[0]);												 // 키 입력 (화면 좌우 스크롤, 상하 파이어볼)
+				KeyProc(hWnd, &nBgX, &g_objTower[0]);												 // 키 입력 (화면 좌우 스크롤, 상하 파이어볼)
 
 				UpdateUnitProc(playerUnit, enemyUnit, &nowMana_InGame, maxMana_InGame, &getGold);	 // 필드 위 유닛 업데이트
 				g_objTower[0].UpdateTower(timer);													 // 플레이어 타워 업데이트
@@ -150,12 +135,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
 				GameResultSet(g_objTower, &isWin, &screenState, &getGold, &stageLevel, &enemyCreateUnitTimer, g_infoUnit);	// 승리, 패배 처리
 				break;
 
-			case pauseScreen:
+			case Screen_Pause:
 				InvalidateRect(hWnd, NULL, TRUE);
 				UpdateWindow(hWnd);
 				break;
 
-			case stageEndScreen:
+			case Screen_StageEnd:
 				InvalidateRect(hWnd, NULL, TRUE);
 				UpdateWindow(hWnd);
 				break;
@@ -191,8 +176,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 
 		// 표면 생성 및 비트맵 가져오기
 		dcScreen = GetDC(hWnd);
-		__Init(dcScreen, g_sfBack, g_sfBG, g_infoUnit, g_btnUnit, g_sfBtn, g_objTower, g_sfTitle, g_sfUpgradeBtn, g_sfGameResult, 
-			g_sfMana, g_sfGold, g_sfTowerIcon, g_sfUpgradeArrow, g_sfBtnScreen, g_sfRoundBtn, g_sfRectBtn, g_sfArrow);
+		Init(dcScreen, g_surfaceInfo_Array, g_sfBack, g_btnUnit, g_infoUnit, g_objTower);
 		ReleaseDC(hWnd, dcScreen);
 
 		for (int i = 0; i < MAX_UNIT_COUNT; i++)	// 초기화
@@ -211,7 +195,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 
 		switch (screenState)
 		{
-		case titleScreen:			// 타이틀 화면 클릭
+		case Screen_Title:			// 타이틀 화면 클릭
 			if (mouseClickXPos > WINDOW_WIDTH / 2 - 150 && mouseClickXPos < WINDOW_WIDTH / 2 + 150)
 			{
 				if (mouseClickYPos > 250 && mouseClickYPos < 320)		buttonClick[0] = TRUE;	// 이어하기
@@ -220,7 +204,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 			}
 			break;
 
-		case readyScreen:			// 준비 화면 클릭
+		case Screen_Ready:			// 준비 화면 클릭
 			if (mouseClickXPos > 100 && mouseClickXPos < 300)
 			{
 				if (mouseClickYPos > 230 && mouseClickYPos < 290)		buttonClick[3] = TRUE;	// 게임시작
@@ -228,7 +212,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 			}
 			break;
 
-		case gameScreen:			// 게임 전투 화면 클릭
+		case Screen_Game:			// 게임 전투 화면 클릭
 			if (mouseClickYPos > 350 && mouseClickYPos < 450)	// 마우스 클릭 (유닛 생성)
 			{
 				if (!OnClickUnitIconInPlay(playerUnit, mouseClickXPos, &nowMana_InGame, &maxMana_InGame, &manaLevel_InGame, &manaDelay_InGame, g_infoUnit, g_objTower))	break;
@@ -236,7 +220,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 			if (mouseClickXPos > 1180 && mouseClickXPos < 1220 && mouseClickYPos > 5 && mouseClickYPos < 55)	buttonClick[5] = TRUE;	// 일시정지 버튼
 			break;
 
-		case pauseScreen:			// 일시정지 화면
+		case Screen_Pause:			// 일시정지 화면
 			if (mouseClickYPos > MAP_HEIGHT / 2 - 50 && mouseClickYPos < MAP_HEIGHT / 2 + 50)
 			{
 				if (mouseClickXPos > WINDOW_WIDTH / 2 - 150 && mouseClickXPos < WINDOW_WIDTH / 2 - 70)		buttonClick[6] = TRUE;	// 계속하기
@@ -245,7 +229,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 			}
 			break;
 
-		case stageEndScreen:		// 스테이지 종료 화면
+		case Screen_StageEnd:		// 스테이지 종료 화면
 			if (mouseClickXPos > WINDOW_WIDTH / 2 - 85 && mouseClickXPos < WINDOW_WIDTH / 2 + 85 && mouseClickYPos > MAP_HEIGHT / 2 + 50 && mouseClickYPos < MAP_HEIGHT / 2 + 100)
 				buttonClick[9] = TRUE;	// 다음으로 버튼
 			break;
@@ -262,27 +246,27 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 
 		switch (screenState)
 		{
-		case titleScreen:			// 타이틀 화면 클릭
+		case Screen_Title:			// 타이틀 화면 클릭
 			OnClickUpTitleScreen(&hWnd, &screenState, mouseX, mouseY, mouseClickXPos, mouseClickYPos, &gold, &enemyCreateUnitTimer, g_infoUnit, g_objTower, &maxMana, &manaDelay, upgradeLevel, upgradeGold, &stageLevel);
 			break;
 
-		case readyScreen:			// 준비 화면 클릭
+		case Screen_Ready:			// 준비 화면 클릭
 			OnClickUpReadyScreen(&screenState, mouseX, mouseY, mouseClickXPos, mouseClickYPos, &nBgX, &maxMana_InGame, &maxMana, &manaDelay_InGame, &manaDelay, stageLevel, &gold, g_infoUnit, upgradeLevel, upgradeGold, g_objTower);
 			break;
 
-		case gameScreen:			// 게임 전투 화면 클릭
+		case Screen_Game:			// 게임 전투 화면 클릭
 			if (mouseX > 1180 && mouseX < 1220 && mouseY > 5 && mouseY < 55)
 			{
 				isWin = FALSE;
-				screenState = pauseScreen;
+				screenState = Screen_Pause;
 			}
 			break;
 
-		case pauseScreen:			// 일시 정지 화면
+		case Screen_Pause:			// 일시 정지 화면
 			OnClickUpPauseScreen(&screenState, mouseX, mouseY, mouseClickXPos, mouseClickYPos, &nBgX, playerUnit, enemyUnit, g_objTower, &gold, &getGold, &nowMana_InGame, &maxMana_InGame, maxMana, &manaDelay_InGame, manaDelay, &manaTimer, &manaLevel_InGame);
 			break;
 
-		case stageEndScreen:		// 스테이지 종료 화면, 다음으로 버튼
+		case Screen_StageEnd:		// 스테이지 종료 화면, 다음으로 버튼
 			OnClickUpStageScreen(&screenState, mouseX, mouseY, mouseClickXPos, mouseClickYPos, playerUnit, enemyUnit, g_objTower, &gold, &getGold, &nowMana_InGame, &maxMana_InGame, maxMana, &manaDelay_InGame, manaDelay, &manaTimer, &manaLevel_InGame);
 			break;
 		}
@@ -294,28 +278,28 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 
 		switch (screenState)
 		{
-		case titleScreen:			// 타이틀 화면 그리기
-			PaintTitleScreen(buttonClick, &g_sfBG, &g_sfTitle, g_sfRectBtn, nBgX, &newFont, &oldFont);
+		case Screen_Title:			// 타이틀 화면 그리기
+			PaintTitleScreen(buttonClick, g_surfaceInfo_Array, nBgX, &newFont, &oldFont);
 			break;
 
-		case readyScreen:			// 준비 화면 그리기
-			PainrReadyScreen(buttonClick, &g_sfBG, g_sfRectBtn, nBgX, &newFont, &oldFont, stageLevel, gold, g_infoUnit, &g_sfUpgradeBtn, upgradeLevel, upgradeGold, g_objTower, &g_sfMana, maxMana, manaDelay, &g_sfTowerIcon);
+		case Screen_Ready:			// 준비 화면 그리기
+			PainrReadyScreen(buttonClick, g_surfaceInfo_Array, nBgX, &newFont, &oldFont, stageLevel, gold, g_infoUnit, upgradeLevel, upgradeGold, g_objTower, maxMana, manaDelay);
 			break;
 
-		case gameScreen:			// 게임 배틀 화면 그리기
-			PaintGameScreen(g_objTower, g_infoUnit, playerUnit, enemyUnit, &g_sfBG, &g_sfBtn, g_btnUnit, &g_sfMana, g_sfRoundBtn, buttonClick, nBgX, maxMana_InGame, nowMana_InGame, getGold, &newFont, &oldFont);
+		case Screen_Game:			// 게임 배틀 화면 그리기
+			PaintGameScreen(g_objTower, g_infoUnit, playerUnit, enemyUnit, g_surfaceInfo_Array, g_btnUnit, buttonClick, nBgX, maxMana_InGame, nowMana_InGame, getGold, &newFont, &oldFont);
 			break;
 
-		case pauseScreen:			// 일시 정지 화면
-			PaintPauseScreen(&g_sfUpgradeBtn, g_sfRoundBtn, buttonClick);
+		case Screen_Pause:			// 일시 정지 화면
+			PaintPauseScreen(g_surfaceInfo_Array, buttonClick);
 			break;
 
-		case stageEndScreen:		// 스테이지 종료 화면
-			PaintStageEndScreen(&g_sfUpgradeBtn, g_sfGameResult, isWin, buttonClick, g_sfRectBtn, getGold, &newFont, &oldFont);
+		case Screen_StageEnd:		// 스테이지 종료 화면
+			PaintStageEndScreen(g_surfaceInfo_Array, isWin, buttonClick, getGold, &newFont, &oldFont);
 			break;
 		}
 
-		__CompleteBlt(dcScreen, &g_sfBack);		// 화면 출력
+		CompleteBlt(dcScreen, &g_sfBack);		// 화면 출력
 		EndPaint(hWnd, &ps);
 
 		return 0;
@@ -326,7 +310,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 	case WM_DESTROY:	
 		g_objTower[0].GetTowerWizard()->DestroyFireBall();
 		SaveFile(stageLevel, gold, g_infoUnit, upgradeLevel);
-		__DestroyAll(g_sfBack, g_sfBG, g_infoUnit, playerUnit, enemyUnit);
+		DestroyAll(g_sfBack, g_surfaceInfo_Array[Surface_Background], g_infoUnit, playerUnit, enemyUnit);
 		PostQuitMessage(0);
 		return 0;
 	}

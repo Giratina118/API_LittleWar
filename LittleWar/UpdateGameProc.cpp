@@ -8,7 +8,7 @@
 extern Timer timer;
 
 // 키보드 입력 (화면 좌우 스크롤, 화살 상하 각도)
-void __KeyProc(HWND hWnd, int* nBgX, CTower* myTower)
+void KeyProc(HWND hWnd, int* nBgX, CTower* myTower)
 {
 	if (GetKeyState(VK_RIGHT) & 0x80 || GetKeyState('D') & 0x80)	// 오른쪽으로 이동
 	{
@@ -138,7 +138,7 @@ void GameResultSet(CTower* g_objTower, BOOL* isWin, Screen* screenState, int* ge
 	if (g_objTower[0].TowerHPZero())			// 패배 처리
 	{
 		*isWin = FALSE;
-		*screenState = stageEndScreen;
+		*screenState = Screen_StageEnd;
 	}
 	else if (g_objTower[1].TowerHPZero())		// 승리 처리
 	{
@@ -146,6 +146,6 @@ void GameResultSet(CTower* g_objTower, BOOL* isWin, Screen* screenState, int* ge
 		*getGold += *getGold * 0.5f + *stageLevel * 500;
 		(*stageLevel)++;
 		StageClear(*stageLevel, enemyCreateUnitTimer, g_infoUnit, g_objTower);
-		*screenState = stageEndScreen;
+		*screenState = Screen_StageEnd;
 	}
 }
